@@ -22,6 +22,7 @@ Accurately classify oil purity patterns using a manual Perceptron implementation
 - [ ] Training termination based on zero errors or a 1000-epoch limit.
 - [ ] Use of NumPy for vector operations.
 - [ ] Data ingestion from the provided 30-pattern training set.
+- [ ] Generation of graphs at each epoch to visualize training progress.
 
 ### Out of Scope
 

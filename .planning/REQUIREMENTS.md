@@ -25,6 +25,10 @@
 - [ ] **TRAIN-03**: Termination when errors reach zero or after 1000 epochs.
 - [ ] **TRAIN-04**: Reporting of results (final weights, number of epochs, final error count) for each run.
 
+### Visualization
+
+- [ ] **VIS-01**: Generate graphs at each epoch to visualize the decision boundary or error reduction.
+
 ## v2 Requirements
 
 - **EVAL-01**: Performance visualization (error curve over epochs).
@@ -52,10 +56,11 @@
 | TRAIN-02 | Phase 3 | Pending |
 | TRAIN-03 | Phase 3 | Pending |
 | TRAIN-04 | Phase 3 | Pending |
+| VIS-01 | Phase 3 | Pending |
 
 **Coverage:**
-- v1 requirements: 11 total
-- Mapped to phases: 11
+- v1 requirements: 12 total
+- Mapped to phases: 12
 - Unmapped: 0 ✓
 
 ---
