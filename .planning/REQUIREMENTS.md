@@ -29,7 +29,8 @@
 
 - [ ] **VIS-01**: Generate graphs at each epoch to visualize the decision boundary or error reduction.
 
-## v2 Requirements
+- [ ] **REPORT-01**: Generate a web report (HTML/CSS) containing training results, classification tables, and theoretical answers.
+- [ ] **TEST-01**: Classify 10 additional oil samples across all 5 training runs.
 
 - **EVAL-01**: Performance visualization (error curve over epochs).
 - **TEST-01**: Support for testing on a separate validation set.
@@ -57,8 +58,10 @@
 | TRAIN-03 | Phase 3 | Pending |
 | TRAIN-04 | Phase 3 | Pending |
 | VIS-01 | Phase 3 | Pending |
+| REPORT-01 | Phase 3 | Pending |
+| TEST-01 | Phase 3 | Pending |
 | EVAL-01 | v2 | Pending |
-| TEST-01 | v2 | Pending |
+| TEST-01-V2 | v2 | Pending |
 
 **Coverage:**
 - v1 requirements: 12 total
