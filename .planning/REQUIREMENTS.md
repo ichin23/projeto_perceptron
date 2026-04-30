@@ -53,13 +53,13 @@
 | ALGO-02 | Phase 2 | Complete |
 | ALGO-03 | Phase 2 | Complete |
 | ALGO-04 | Phase 2 | Complete |
-| TRAIN-01 | Phase 3 | Pending |
-| TRAIN-02 | Phase 3 | Pending |
-| TRAIN-03 | Phase 3 | Pending |
-| TRAIN-04 | Phase 3 | Pending |
-| VIS-01 | Phase 3 | Pending |
-| REPORT-01 | Phase 3 | Pending |
-| TEST-01 | Phase 3 | Pending |
+| TRAIN-01 | Phase 3 | Complete |
+| TRAIN-02 | Phase 3 | Complete |
+| TRAIN-03 | Phase 3 | Complete |
+| TRAIN-04 | Phase 3 | Complete |
+| VIS-01 | Phase 3 | Complete |
+| REPORT-01 | Phase 3 | Complete |
+| TEST-01 | Phase 3 | Complete |
 | EVAL-01 | v2 | Pending |
 | TEST-01-V2 | v2 | Pending |
 
