@@ -45,9 +45,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Complete |
+| DATA-02 | Phase 1 | Complete |
+| DATA-03 | Phase 1 | Complete |
 | ALGO-01 | Phase 2 | Pending |
 | ALGO-02 | Phase 2 | Pending |
 | ALGO-03 | Phase 2 | Pending |
@@ -57,6 +57,8 @@
 | TRAIN-03 | Phase 3 | Pending |
 | TRAIN-04 | Phase 3 | Pending |
 | VIS-01 | Phase 3 | Pending |
+| EVAL-01 | v2 | Pending |
+| TEST-01 | v2 | Pending |
 
 **Coverage:**
 - v1 requirements: 12 total

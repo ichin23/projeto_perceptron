@@ -6,7 +6,7 @@ Goal: Build a functional Perceptron using the supervised Hebbian rule and run 5 
 
 | # | Phase | Goal | Requirements | Status |
 |---|-------|------|--------------|--------|
-| 1 | Setup & Data | 1/1 | Complete    | 2026-04-30 |
+| 1 | Setup & Data | Prepare environment and training data file. | DATA-01, DATA-02, DATA-03 | Complete (2026-04-30) |
 | 2 | Algorithm | Implement the Perceptron and Hebbian update rule. | ALGO-01, ALGO-02, ALGO-03, ALGO-04 | Pending |
 | 3 | Execution | Implement the 5-run training loop, report results, and generate graphs. | TRAIN-01, TRAIN-02, TRAIN-03, TRAIN-04, VIS-01 | Pending |
 
