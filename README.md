@@ -14,3 +14,10 @@ Uma implementação teórica e prática do algoritmo de rede neural de camada ú
 **📊 Acesse os Resultados (Dashboard do Perceptron):** [https://projeto-perceptron.vercel.app/perceptron/report.html](https://projeto-perceptron.vercel.app/perceptron/report.html)
 
 > Você pode acessar as análises, as respostas às perguntas do trabalho e todas as tabelas de classificação e treinamento dentro da pasta `perceptron/` deste repositório.
+
+### 2. Projeto ADALINE
+Uma implementação teórica e prática da rede ADALINE (Adaptive Linear Neuron). O projeto aplica a regra de aprendizado de Widrow-Hoff (regra Delta) para classificar sinais ruidosos transmitidos a um comutador de válvulas industriais. O projeto explora a convergência do Erro Quadrático Médio (MSE) e a estabilidade dos pesos em problemas convexos.
+
+**📊 Acesse os Resultados (Relatório ADALINE):** [https://projeto-perceptron.vercel.app/adaline/report.html](https://projeto-perceptron.vercel.app/adaline/report.html)
+
+> Você pode acessar as análises de erro quadrático médio, resultados da classificação dos sinais e gráficos de convergência na pasta `adaline/` deste repositório.
