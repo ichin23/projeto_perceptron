@@ -12,19 +12,19 @@ Accurately classify noisy valve-routing signals using a manual ADALINE implement
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Implementation of ADALINE using the Widrow-Hoff (LMS/Delta) rule. — v1.0
+- ✓ Support for 5 independent training runs with randomized initial weights [0, 1]. — v1.0
+- ✓ Different random seed per run so initial weights are never repeated. — v1.0
+- ✓ Integration of a bias term w0 (with fixed input x0 = 1). — v1.0
+- ✓ Training with learning rate η = 0.0025. — v1.0
+- ✓ Stopping criterion: change in MSE < ε = 10⁻⁶ (or equivalent precision condition). — v1.0
+- ✓ Data ingestion from the 35-pattern training set. — v1.0
+- ✓ Output table: for each run — initial weights (w0–w4), final weights (w0–w4), number of epochs. — v1.0
+- ✓ Convergence graph (MSE vs. epochs) for each training run. — v1.0
 
 ### Active
 
-- [ ] Implementation of ADALINE using the Widrow-Hoff (LMS/Delta) rule.
-- [ ] Support for 5 independent training runs with randomized initial weights [0, 1].
-- [ ] Different random seed per run so initial weights are never repeated.
-- [ ] Integration of a bias term w0 (with fixed input x0 = 1).
-- [ ] Training with learning rate η = 0.0025.
-- [ ] Stopping criterion: change in MSE < ε = 10⁻⁶ (or equivalent precision condition).
-- [ ] Data ingestion from the 35-pattern training set.
-- [ ] Output table: for each run — initial weights (w0–w4), final weights (w0–w4), number of epochs.
-- [ ] Convergence graph (MSE vs. epochs) for each training run.
+(None currently — milestone completed)
 
 ### Out of Scope
 
@@ -43,9 +43,14 @@ Accurately classify noisy valve-routing signals using a manual ADALINE implement
 - **Learning rate**: η = 0.0025
 - **Environment**: Linux, Python 3.
 
+**Current State (v1.0):**
+Shipped v1.0 with 416 LOC in Python.
+Tech stack: Python, NumPy, Pandas, Matplotlib.
+Results show stable convergence around ~800-850 epochs with 91.4% accuracy across all initial random states.
+
 ## Constraints
 
-- **Tech Stack**: Python 3 and NumPy only (+ Matplotlib for graphs).
+- **Tech Stack**: Python 3 and NumPy (+ Matplotlib, Pandas allowed).
 - **Algorithm**: Specifically the Widrow-Hoff (LMS) rule for ADALINE.
 - **Initial Weights**: Random values in [0, 1] with a different seed per run.
 - **Bias**: Input x0 = 1 (constant), weight w0 is trainable.
@@ -54,10 +59,10 @@ Accurately classify noisy valve-routing signals using a manual ADALINE implement
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| MSE-delta stopping criterion | Matches ε = 10⁻⁶ precision requirement from assignment | — Pending |
-| NumPy for math | Efficient vector operations, consistent with Perceptron project | — Pending |
-| Sign activation for classification | ADALINE linear output → sign gives -1/+1 class label | — Pending |
-| Separate random seed per run | Assignment requires non-repeated initial weights across runs | — Pending |
+| MSE-delta stopping criterion | Matches ε = 10⁻⁶ precision requirement from assignment | ✓ Good |
+| NumPy for math | Efficient vector operations, consistent with Perceptron project | ✓ Good |
+| Sign activation for classification | ADALINE linear output → sign gives -1/+1 class label | ✓ Good |
+| Separate random seed per run | Assignment requires non-repeated initial weights across runs | ✓ Good |
 
 ## Evolution
 
@@ -77,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-07 after initialization*
+*Last updated: 2026-05-07 after v1.0 milestone*
