@@ -23,7 +23,20 @@ Foram executados 5 treinamentos para a rede ADALINE, inicializando o vetor de pe
 
 ---
 
-## 2. Resultados de Classificação de Teste
+## 2. Gráficos de Erro Quadrático Médio (T1 e T2)
+
+**Pergunta:** *Para os dois primeiros treinamentos realizados acima trace os respectivos gráficos dos valores de erro quadrático médio (EQM) em função de cada época de treinamento. Imprima os dois gráficos numa mesma folha.*
+
+Abaixo encontram-se os gráficos ilustrando a queda exponencial do Erro Quadrático Médio ao longo das épocas até que o critério de parada (|ΔMSE| < 10⁻⁶) seja atingido.
+
+<div align="center">
+  <img src="plots/convergencia_T1.png" width="48%" alt="Gráfico de Convergência T1">
+  <img src="plots/convergencia_T2.png" width="48%" alt="Gráfico de Convergência T2">
+</div>
+
+---
+
+## 3. Resultados de Classificação de Teste
 
 Para todos os treinamentos realizados acima, a rede ADALINE foi aplicada para classificar as seguintes amostras de teste, decidindo se os sinais seriam encaminhados para a Válvula A (-1) ou B (1):
 
@@ -49,7 +62,7 @@ Para todos os treinamentos realizados acima, a rede ADALINE foi aplicada para cl
 
 ---
 
-## 3. Análise das Perguntas
+## 4. Análise das Perguntas
 
 ### Embora o número de épocas de cada treinamento realizado no item 2 seja diferente, explique por que então os valores dos pesos continuam praticamente inalterados.
 
