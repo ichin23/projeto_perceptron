@@ -1,0 +1,18 @@
+1. Centros (k‑means) nos padrões com presença de radiação:
+   Centro 1: (0.7438, 0.7230, 0.3906)  Variância: 0.085576
+   Centro 2: (0.5287, 0.5201, 0.7878)  Variância: 0.187887
+
+2. Pesos da camada de saída após treinamento delta (bias primeiro):
+   0.645502  -0.348571  0.093704
+
+3. Função de pós‑processamento: sinal(y) = 1 se y >= 0, -1 caso contrário.
+
+4. Taxa de acerto no conjunto de teste: 46.67%
+
+5. Estratégias para melhorar a taxa de acerto:
+   - Ajustar o número de neurônios ocultos (centros) – usar mais de 2 centros para capturar melhor a variabilidade dos padrões.
+   - Utilizar uma estratégia de seleção de centros mais robusta, como K‑Means++ ou inicialização baseada em densidade dos dados.
+   - Normalizar/escalar as características (x1, x2, x3) antes do treinamento para evitar que atributos com maior escala dominem o cálculo das distâncias.
+   - Experimentar diferentes funções de base (ex.: funções multiquadráticas ou funções sigmoides) em vez da gaussiana padrão.
+   - Aplicar regularização ao treinamento da camada de saída (por exemplo, ridge regression) para reduzir over‑fitting.
+   - Aumentar o conjunto de treinamento, ou usar validação cruzada para escolher hiper‑parâmetros como a taxa de aprendizado η e o critério de parada ε.

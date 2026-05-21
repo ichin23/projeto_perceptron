@@ -1,0 +1,15 @@
+M,Estratégia,Acurácia Treino,Acurácia Teste
+2,Aleatório,70.0%,70.0%
+3,Aleatório,77.5%,90.0%
+5,Aleatório,95.0%,100.0%
+8,Aleatório,100.0%,100.0%
+10,Aleatório,100.0%,100.0%
+15,Aleatório,100.0%,100.0%
+20,Aleatório,97.5%,90.0%
+2,K-Means,65.0%,90.0%
+3,K-Means,87.5%,90.0%
+5,K-Means,97.5%,100.0%
+8,K-Means,97.5%,100.0%
+10,K-Means,100.0%,100.0%
+15,K-Means,100.0%,100.0%
+20,K-Means,100.0%,100.0%
