@@ -53,30 +53,32 @@ def run_simulation():
         sweeps_async_total = 0
         iterations_sync_total = 0
         
-        # Save one sample run for visualization
-        sample_noisy, sample_flips = inject_noise(pattern, noise_20)
-        
-        # Recover asynchronous
-        rec_async, conv_async, hist_async = net.predict_asynchronous(sample_noisy, max_sweeps=100, record_history=True)
-        # Recover synchronous
-        rec_sync, conv_sync, hist_sync = net.predict_synchronous(sample_noisy, max_iterations=100, record_history=True)
-        
-        sample_runs[name] = {
-            'original': pattern.tolist(),
-            'noisy': sample_noisy.tolist(),
-            'flips': sample_flips.tolist(),
-            'recovered_async': rec_async.tolist(),
-            'converged_async': bool(conv_async),
-            'success_async': bool(np.array_equal(rec_async, pattern)),
-            'history_async_energies': hist_async['energies'],
-            'history_async_sweeps': hist_async['sweeps_completed'],
+        # Save three sample runs for visualization (3 situations of transmission per pattern = 12 total)
+        sample_runs[name] = []
+        for run_idx in range(3):
+            sample_noisy, sample_flips = inject_noise(pattern, noise_20)
             
-            'recovered_sync': rec_sync.tolist(),
-            'converged_sync': bool(conv_sync),
-            'success_sync': bool(np.array_equal(rec_sync, pattern)),
-            'history_sync_energies': hist_sync['energies'],
-            'history_sync_iterations': hist_sync['iterations_completed']
-        }
+            # Recover asynchronous
+            rec_async, conv_async, hist_async = net.predict_asynchronous(sample_noisy, max_sweeps=100, record_history=True)
+            # Recover synchronous
+            rec_sync, conv_sync, hist_sync = net.predict_synchronous(sample_noisy, max_iterations=100, record_history=True)
+            
+            sample_runs[name].append({
+                'original': pattern.tolist(),
+                'noisy': sample_noisy.tolist(),
+                'flips': sample_flips.tolist(),
+                'recovered_async': rec_async.tolist(),
+                'converged_async': bool(conv_async),
+                'success_async': bool(np.array_equal(rec_async, pattern)),
+                'history_async_energies': hist_async['energies'],
+                'history_async_sweeps': hist_async['sweeps_completed'],
+                
+                'recovered_sync': rec_sync.tolist(),
+                'converged_sync': bool(conv_sync),
+                'success_sync': bool(np.array_equal(rec_sync, pattern)),
+                'history_sync_energies': hist_sync['energies'],
+                'history_sync_iterations': hist_sync['iterations_completed']
+            })
         
         # Run 1000 trials
         for trial in range(n_trials):
@@ -100,7 +102,7 @@ def run_simulation():
         avg_iters_sync = (iterations_sync_total / successes_sync) if successes_sync > 0 else 0
         
         print(f"Padrão '{name}':")
-        print(f"  Amostra Async -> Sucesso: {sample_runs[name]['success_async']} em {sample_runs[name]['history_async_sweeps']} sweeps. Energia inicial: {sample_runs[name]['history_async_energies'][0]:.2f} -> final: {sample_runs[name]['history_async_energies'][-1]:.2f}")
+        print(f"  Amostra Async -> Sucesso: {sample_runs[name][0]['success_async']} em {sample_runs[name][0]['history_async_sweeps']} sweeps. Energia inicial: {sample_runs[name][0]['history_async_energies'][0]:.2f} -> final: {sample_runs[name][0]['history_async_energies'][-1]:.2f}")
         print(f"  Taxa de recuperação (1000 testes):")
         print(f"    Asynchronous: {rate_async:.1f}% (média {avg_sweeps_async:.2f} sweeps)")
         print(f"    Synchronous:  {rate_sync:.1f}% (média {avg_iters_sync:.2f} iterações)")

@@ -78,35 +78,47 @@ def build_report():
     with open(os.path.join(BASE_DIR, 'sample_runs.json'), 'r', encoding='utf-8') as f:
         sample_runs = json.load(f)
         
-    # Generate HTML grids for each digit
+    # Generate HTML grids for each digit, displaying all 3 situations
     grids_html_list = []
     for name in ["1", "2", "3", "4"]:
-        run = sample_runs[name]
-        grid_html = f"""
+        runs_list = sample_runs[name]
+        
+        runs_html = ""
+        for i, run in enumerate(runs_list):
+            runs_html += f"""
+            <div class="situation-container">
+                <h4 class="situation-title">Situação de Transmissão {name}.{i+1}</h4>
+                {generate_grid_html(run['original'], run['noisy'], run['recovered_async'], run['flips'], run['success_async'])}
+                <div class="sample-stats">
+                    <div class="stat-box">
+                        <span class="stat-label">Convergência Asíncrona</span>
+                        <span class="stat-value">{run['history_async_sweeps']} sweeps</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Energia Inicial</span>
+                        <span class="stat-value">{run['history_async_energies'][0]:.3f}</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Energia Final</span>
+                        <span class="stat-value">{run['history_async_energies'][-1]:.3f}</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Dinâmica Síncrona</span>
+                        <span class="stat-value">{"Sim" if run['converged_sync'] else "Não"} ({run['history_sync_iterations']} iters)</span>
+                    </div>
+                </div>
+            </div>
+            """
+            
+        digit_section_html = f"""
         <div class="digit-section">
             <h3>Dígito Padrão {name}</h3>
-            {generate_grid_html(run['original'], run['noisy'], run['recovered_async'], run['flips'], run['success_async'])}
-            <div class="sample-stats">
-                <div class="stat-box">
-                    <span class="stat-label">Convergência Asíncrona</span>
-                    <span class="stat-value">{run['history_async_sweeps']} sweeps</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Energia Inicial</span>
-                    <span class="stat-value">{run['history_async_energies'][0]:.3f}</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Energia Final (Estável)</span>
-                    <span class="stat-value">{run['history_async_energies'][-1]:.3f}</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Convergência Síncrona</span>
-                    <span class="stat-value">{"Sim" if run['converged_sync'] else "Não"} ({run['history_sync_iterations']} iters)</span>
-                </div>
+            <div class="situations-wrapper">
+                {runs_html}
             </div>
         </div>
         """
-        grids_html_list.append(grid_html)
+        grids_html_list.append(digit_section_html)
         
     grids_combined_html = "\n".join(grids_html_list)
     
@@ -277,8 +289,10 @@ def build_report():
         h3 {{
             font-size: 1.4rem;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
             color: #93c5fd;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
         }}
 
         p {{
@@ -302,7 +316,24 @@ def build_report():
             border: 1px solid rgba(255, 255, 255, 0.03);
             border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }}
+
+        .situation-container {{
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .situation-title {{
+            color: #93c5fd !important;
+            font-size: 1.05rem !important;
+            margin-bottom: 0.75rem !important;
+            font-weight: 600 !important;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
         }}
 
         .digit-comparison-card {{
@@ -310,7 +341,7 @@ def build_report():
             flex-direction: column;
             align-items: center;
             gap: 1.5rem;
-            margin: 1.5rem 0;
+            margin: 1rem 0;
         }}
 
         .grids-wrapper {{
@@ -607,12 +638,40 @@ def build_report():
                     </table>
                 </div>
             </div>
-            
-            <!-- Linha Completa: Demonstração Visual das Grades -->
+
+            <!-- Linha Completa: Efeito do Ruído Excessivo -->
             <div class="card full-width">
-                <h2>Demonstração Visual da Recuperação (20% Ruído)</h2>
+                <h2>Efeito do Ruído Excessivo na Rede de Hopfield</h2>
                 <p>
-                    Abaixo apresentamos as saídas reais de amostras de transmissão no link de comunicação. Os pixels em <strong>vermelho tremeluzente/destacado</strong> foram corrompidos no link de comunicação e recuperados pela rede de Hopfield assíncrona.
+                    A estabilidade e robustez de uma rede de Hopfield dependem da distância (em termos de distância de Hamming) entre o estado de entrada e o atrator correspondente. Quando aumentamos excessivamente o nível de ruído (geralmente acima de 30% a 40% de pixels corrompidos), ocorrem três fenômenos principais:
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                    <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 1.5rem;">
+                        <h3 style="color: #f87171; margin-bottom: 0.5rem; border-bottom: none; padding-bottom: 0;">1. Convergência para Estados Espúrios</h3>
+                        <p style="font-size: 0.9rem; margin-bottom: 0;">
+                            A regra Hebbiana de treinamento gera atratores indesejados chamados de <strong>estados espúrios</strong>, que são mínimos locais da função de energia que não fazem parte do conjunto de treinamento. Com ruído extremo, a rede perde a referência do padrão original e converge para essas combinações lineares ou misturas dos padrões originais.
+                        </p>
+                    </div>
+                    <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1.5rem;">
+                        <h3 style="color: #fbbf24; margin-bottom: 0.5rem; border-bottom: none; padding-bottom: 0;">2. Atração por Outros Padrões</h3>
+                        <p style="font-size: 0.9rem; margin-bottom: 0;">
+                            Se o ruído alterar pixels chaves que tornam a imagem mais similar a outro dígito do que ao original (ex: corromper o dígito 3 de modo que ele se pareça com o dígito 2), a dinâmica da rede empurrará o estado para a bacia de atração do padrão concorrente, resultando na recuperação de uma imagem limpa, porém incorreta.
+                        </p>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 1.5rem;">
+                        <h3 style="color: #60a5fa; margin-bottom: 0.5rem; border-bottom: none; padding-bottom: 0;">3. Estados Complementares (Inversos)</h3>
+                        <p style="font-size: 0.9rem; margin-bottom: 0;">
+                            Devido à simetria dos pesos (W_ij = W_ji), se um padrão <em>x</em> é estável, o seu inverso <em>-x</em> também o é (uma imagem em negativo fotográfico). Se o ruído ultrapassar 50%, a entrada estará mais próxima do inverso do padrão original, fazendo com que a rede recupere a imagem com cores completamente invertidas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Linha Completa: Demonstração Visual das Grades (12 situações) -->
+            <div class="card full-width">
+                <h2>Simulação de 12 Situações de Transmissão (3 para cada padrão)</h2>
+                <p>
+                    Abaixo apresentamos as saídas reais de amostras de transmissão no link de comunicação. Os pixels em <strong>vermelho destacado</strong> foram corrompidos no link de comunicação e recuperados pela rede de Hopfield assíncrona.
                 </p>
                 {grids_combined_html}
             </div>
@@ -654,7 +713,7 @@ def build_report():
                 <ol>
                     <li>
                         <strong>Capacidade de Armazenamento e Ortogonalidade</strong>: 
-                        O dígito "1" obteve a melhor taxa de recuperação (~91.6% sob 20% de ruído) devido à sua baixa correlação com os demais padrões (ex: produto interno normalizado de apenas -0.20 com o dígito "4").
+                        O dígito "1" obteve a melhor taxa de recuperação (~91.5% sob 20% de ruído) devido à sua baixa correlação com os demais padrões (ex: produto interno normalizado de apenas -0.20 com o dígito "4").
                         Por outro lado, o dígito "3" apresentou a menor taxa de recuperação (~45.8%). Isso se deve à sua grande similaridade estrutural com o dígito "2" (correlação de +0.47, ou 21 pixels correspondentes de mesma cor). A alta correlação cria bacias de atração sobrepostas e estados espúrios indesejados, confundindo a rede em níveis maiores de ruído.
                     </li>
                     <li>
@@ -720,24 +779,26 @@ def build_report():
 
         // --- Render Energy Chart ---
         function updateEnergyChart(digitName) {{
-            const run = sampleRuns[digitName];
-            const asyncEnergies = run.history_async_energies;
-            const syncEnergies = run.history_sync_energies;
+            const runs = sampleRuns[digitName];
+            // Render for the first scenario of the selected digit
+            const firstRun = runs[0];
+            const asyncEnergies = firstRun.history_async_energies;
+            const syncEnergies = firstRun.history_sync_energies;
 
             const energyTraces = [
                 {{
                     x: Array.from({{ length: asyncEnergies.length }}, (_, i) => i),
                     y: asyncEnergies,
-                    name: 'Atualização Assíncrona',
+                    name: 'Atualização Assíncrona (Cenário 1)',
                     type: 'scatter',
                     mode: 'lines+markers',
                     line: {{ color: '#3b82f6', width: 2 }},
                     marker: {{ size: 4 }}
                 }},
                 {{
-                    x: Array.from({{ length: syncEnergies.length }}, (_, i) => i * 45), // Scale to match step density roughly
+                    x: Array.from({{ length: syncEnergies.length }}, (_, i) => i * 45),
                     y: syncEnergies,
-                    name: 'Atualização Síncrona (Escalada)',
+                    name: 'Atualização Síncrona (Cenário 1, Escalada)',
                     type: 'scatter',
                     mode: 'lines',
                     line: {{ color: '#8b5cf6', width: 1.5, dash: 'dash' }}
@@ -773,7 +834,7 @@ def build_report():
     # Write to files
     with open(REPORT_PATH, 'w', encoding='utf-8') as f:
         f.write(html_content)
-    print(f"Relatório salvo em: {REPORT_PATH}")
+    print(f"Relatório tempo real salvo em: {REPORT_PATH}")
     
     with open(INDEX_PATH, 'w', encoding='utf-8') as f:
         f.write(html_content)
