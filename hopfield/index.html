@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório - Memória Associativa de Hopfield</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --text-secondary: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+            background-attachment: fixed;
+            line-height: 1.6;
+            padding-bottom: 5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 1s ease-out;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 1.25rem;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-50%) translateX(-4px);
+            border-color: var(--accent-blue);
+        }
+
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 968px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+            header {
+                padding-top: 4rem;
+            }
+            .back-btn {
+                top: 0;
+                transform: none;
+            }
+            .back-btn:hover {
+                transform: translateX(-4px);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #93c5fd;
+        }
+
+        p {
+            color: #cbd5e1;
+            margin-bottom: 1.25rem;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+            color: #cbd5e1;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Grids Styling */
+        .digit-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .digit-comparison-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .grids-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .grid-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .grid-column h4 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            width: 120px;
+            background: #1e293b;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .grid-cell {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .grid-cell.white-pixel {
+            background: #e2e8f0;
+        }
+
+        .grid-cell.dark-pixel {
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .grid-cell.corrupted-pixel {
+            box-shadow: 0 0 8px #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .grid-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--accent-blue);
+        }
+
+        .grid-arrow svg {
+            width: 32px;
+            height: 32px;
+            animation: pulseHorizontal 1.5s infinite ease-in-out;
+        }
+
+        .arrow-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .digit-metadata {
+            text-align: center;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .status-badge.failure {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .sample-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #93c5fd;
+        }
+
+        /* Table Styling */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            color: #93c5fd;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rate-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .rate-badge.async {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .rate-badge.sync {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        /* Plotly Containers */
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            padding: 1rem;
+        }
+
+        .math-block {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+            color: #a7f3d0;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulseHorizontal {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(4px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="../index.html" class="back-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Voltar ao Portfólio
+            </a>
+            <h1>Projeto Hopfield</h1>
+            <p class="subtitle">Memória Associativa de 45 Neurônios para Recuperação de Imagens Transmitidas sob Ruído</p>
+        </header>
+
+        <div class="grid-layout">
+            <!-- Coluna da Esquerda: Teoria e Conceitos -->
+            <div class="card">
+                <h2>Fundamentação Teórica</h2>
+                <p>
+                    A rede de <strong>Hopfield</strong> é uma rede neural recorrente de camada única que atua como uma <strong>memória associativa auto-associativa</strong>. Diferente das redes tradicionais feed-forward (como Perceptron e ADALINE), ela armazena informações como pontos de equilíbrio estáveis (atratores) de um sistema dinâmico.
+                </p>
+                <p>
+                    O modelo consiste em 45 neurônios dispostos em uma grade de 9x5 pixels. A representação dos estados é bipolar: <strong>Branco (-1)</strong> e <strong>Escuro (+1)</strong>.
+                </p>
+
+                <h3>1. Regra de Aprendizado Hebbiano</h3>
+                <p>
+                    Os pesos sinápticos são determinados de forma direta (sem iterações de treino baseadas em gradiente) a partir da média dos produtos externos dos padrões que desejamos armazenar:
+                </p>
+                <div class="math-block">
+                    W = (1 / N) * sum_{&mu;} (x^{&mu;} * (x^{&mu;})^T)<br>
+                    W_ii = 0 (sem auto-conexão)
+                </div>
+                <p>
+                    Onde <em>N = 45</em> é o número de neurônios, e <em>x^{&mu;}</em> representa o vetor do padrão &mu;. Zerar a diagonal impede que o neurônio reforce indefinidamente o seu próprio estado anterior, o que favorece a convergência para padrões gerais.
+                </p>
+
+                <h3>2. Dinâmica de Atualização</h3>
+                <p>
+                    Implementamos duas abordagens de atualização:
+                </p>
+                <ul>
+                    <li><strong>Asíncrona (Padrão)</strong>: Um único neurônio é selecionado aleatoriamente e atualizado a cada instante. Isso garante que a <strong>função de energia Lyapunov</strong> decresça de forma estritamente monótona, atingindo um mínimo local estável.</li>
+                    <li><strong>Síncrona</strong>: Todos os neurônios são atualizados ao mesmo tempo. Embora mais rápida, essa dinâmica pode levar a oscilações cíclicas (período 2) ao invés de atratores pontuais fixos.</li>
+                </ul>
+            </div>
+
+            <!-- Coluna da Direita: Parâmetros e Resultados Globais -->
+            <div class="card">
+                <h2>Parâmetros e Configuração</h2>
+                <ul>
+                    <li><strong>Grade de Neurônios:</strong> 45 (9 linhas x 5 colunas)</li>
+                    <li><strong>Padrões Armazenados:</strong> 4 dígitos ("1", "2", "3", "4")</li>
+                    <li><strong>Link de Comunicação:</strong> Injeção de 20% de ruído pseudo-aleatório (9 pixels invertidos por teste)</li>
+                    <li><strong>Simulações por Dígito:</strong> 1000 repetições estocásticas</li>
+                    <li><strong>Análise de Sensibilidade:</strong> Ruído variável de 0% a 50% em passos de 5%</li>
+                </ul>
+
+                <h2 style="margin-top: 2rem;">Desempenho Geral (20% de Ruído)</h2>
+                <p>Resultados compilados após 1000 transmissões estocásticas por padrão:</p>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Padrão</th>
+                                <th>Sucesso Async</th>
+                                <th>Sweeps Médios</th>
+                                <th>Sucesso Sync</th>
+                                <th>Iters Média</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+        <tr>
+            <td><strong>Dígito 1.0</strong></td>
+            <td><span class="rate-badge async">91.6%</span></td>
+            <td>2.01</td>
+            <td><span class="rate-badge sync">91.5%</span></td>
+            <td>2.12</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Dígito 2.0</strong></td>
+            <td><span class="rate-badge async">60.5%</span></td>
+            <td>2.03</td>
+            <td><span class="rate-badge sync">54.9%</span></td>
+            <td>2.03</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Dígito 3.0</strong></td>
+            <td><span class="rate-badge async">45.8%</span></td>
+            <td>2.04</td>
+            <td><span class="rate-badge sync">37.1%</span></td>
+            <td>2.01</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Dígito 4.0</strong></td>
+            <td><span class="rate-badge async">75.4%</span></td>
+            <td>2.08</td>
+            <td><span class="rate-badge sync">78.1%</span></td>
+            <td>2.32</td>
+        </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Linha Completa: Demonstração Visual das Grades -->
+            <div class="card full-width">
+                <h2>Demonstração Visual da Recuperação (20% Ruído)</h2>
+                <p>
+                    Abaixo apresentamos as saídas reais de amostras de transmissão no link de comunicação. Os pixels em <strong>vermelho tremeluzente/destacado</strong> foram corrompidos no link de comunicação e recuperados pela rede de Hopfield assíncrona.
+                </p>
+                
+        <div class="digit-section">
+            <h3>Dígito Padrão 1</h3>
+            
+    <div class="digit-comparison-card">
+        <div class="grids-wrapper">
+            <div class="grid-column">
+                <h4>Original</h4>
+                <div class="grid-container">
+                    <div class="grid-cell white-pixel" title="Pixel 0"></div><div class="grid-cell white-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell white-pixel" title="Pixel 4"></div><div class="grid-cell white-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell white-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell dark-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell white-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell dark-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell white-pixel" title="Pixel 19"></div><div class="grid-cell white-pixel" title="Pixel 20"></div><div class="grid-cell white-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell white-pixel" title="Pixel 24"></div><div class="grid-cell white-pixel" title="Pixel 25"></div><div class="grid-cell white-pixel" title="Pixel 26"></div><div class="grid-cell dark-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell white-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell dark-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell white-pixel" title="Pixel 39"></div><div class="grid-cell white-pixel" title="Pixel 40"></div><div class="grid-cell white-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell white-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">20% ruído</span>
+            </div>
+            <div class="grid-column">
+                <h4>Decodificado (Link)</h4>
+                <div class="grid-container">
+                    <div class="grid-cell white-pixel" title="Pixel 0"></div><div class="grid-cell white-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 4 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 8 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 12 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell white-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell dark-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell white-pixel" title="Pixel 19"></div><div class="grid-cell white-pixel" title="Pixel 20"></div><div class="grid-cell white-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell white-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 25 (CORROMPIDO)"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 26 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell white-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell dark-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel" title="Pixel 34"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 35 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 39 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 40"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 41 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 43 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">Rede Hopfield</span>
+            </div>
+            <div class="grid-column">
+                <h4>Recuperado</h4>
+                <div class="grid-container">
+                    <div class="grid-cell white-pixel" title="Pixel 0"></div><div class="grid-cell white-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell white-pixel" title="Pixel 4"></div><div class="grid-cell white-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell white-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell dark-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell white-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell dark-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell white-pixel" title="Pixel 19"></div><div class="grid-cell white-pixel" title="Pixel 20"></div><div class="grid-cell white-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell white-pixel" title="Pixel 24"></div><div class="grid-cell white-pixel" title="Pixel 25"></div><div class="grid-cell white-pixel" title="Pixel 26"></div><div class="grid-cell dark-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell white-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell dark-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell white-pixel" title="Pixel 39"></div><div class="grid-cell white-pixel" title="Pixel 40"></div><div class="grid-cell white-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell white-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+        </div>
+        <div class="digit-metadata">
+            <span class="status-badge success">✓ SUCESSO</span>
+        </div>
+    </div>
+    
+            <div class="sample-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Asíncrona</span>
+                    <span class="stat-value">2 sweeps</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Inicial</span>
+                    <span class="stat-value">-6.756</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Final (Estável)</span>
+                    <span class="stat-value">-21.956</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Síncrona</span>
+                    <span class="stat-value">Sim (2 iters)</span>
+                </div>
+            </div>
+        </div>
+        
+
+        <div class="digit-section">
+            <h3>Dígito Padrão 2</h3>
+            
+    <div class="digit-comparison-card">
+        <div class="grids-wrapper">
+            <div class="grid-column">
+                <h4>Original</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell white-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell white-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel" title="Pixel 27"></div><div class="grid-cell white-pixel" title="Pixel 28"></div><div class="grid-cell white-pixel" title="Pixel 29"></div><div class="grid-cell dark-pixel" title="Pixel 30"></div><div class="grid-cell dark-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell white-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell dark-pixel" title="Pixel 40"></div><div class="grid-cell dark-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">20% ruído</span>
+            </div>
+            <div class="grid-column">
+                <h4>Decodificado (Link)</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 2 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 4 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell white-pixel" title="Pixel 13"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 14 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 17 (CORROMPIDO)"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 18 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 23 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 28 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 29"></div><div class="grid-cell dark-pixel" title="Pixel 30"></div><div class="grid-cell dark-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell white-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 38 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell dark-pixel" title="Pixel 40"></div><div class="grid-cell dark-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 43 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">Rede Hopfield</span>
+            </div>
+            <div class="grid-column">
+                <h4>Recuperado</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell white-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell white-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel" title="Pixel 27"></div><div class="grid-cell white-pixel" title="Pixel 28"></div><div class="grid-cell white-pixel" title="Pixel 29"></div><div class="grid-cell dark-pixel" title="Pixel 30"></div><div class="grid-cell dark-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell white-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell dark-pixel" title="Pixel 40"></div><div class="grid-cell dark-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+        </div>
+        <div class="digit-metadata">
+            <span class="status-badge success">✓ SUCESSO</span>
+        </div>
+    </div>
+    
+            <div class="sample-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Asíncrona</span>
+                    <span class="stat-value">2 sweeps</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Inicial</span>
+                    <span class="stat-value">-7.733</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Final (Estável)</span>
+                    <span class="stat-value">-26.489</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Síncrona</span>
+                    <span class="stat-value">Sim (2 iters)</span>
+                </div>
+            </div>
+        </div>
+        
+
+        <div class="digit-section">
+            <h3>Dígito Padrão 3</h3>
+            
+    <div class="digit-comparison-card">
+        <div class="grids-wrapper">
+            <div class="grid-column">
+                <h4>Original</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell white-pixel" title="Pixel 25"></div><div class="grid-cell white-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell dark-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell dark-pixel" title="Pixel 34"></div><div class="grid-cell dark-pixel" title="Pixel 35"></div><div class="grid-cell dark-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell dark-pixel" title="Pixel 40"></div><div class="grid-cell dark-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">20% ruído</span>
+            </div>
+            <div class="grid-column">
+                <h4>Decodificado (Link)</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 8 (CORROMPIDO)"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 9 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 11 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 18 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 25 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell dark-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 34 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 35"></div><div class="grid-cell dark-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 39 (CORROMPIDO)"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 40 (CORROMPIDO)"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 41 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">Rede Hopfield</span>
+            </div>
+            <div class="grid-column">
+                <h4>Recuperado</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell dark-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell dark-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel" title="Pixel 10"></div><div class="grid-cell white-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel" title="Pixel 15"></div><div class="grid-cell white-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell dark-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell dark-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell dark-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell dark-pixel" title="Pixel 40"></div><div class="grid-cell dark-pixel" title="Pixel 41"></div><div class="grid-cell dark-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+        </div>
+        <div class="digit-metadata">
+            <span class="status-badge failure">✗ FALHA</span>
+        </div>
+    </div>
+    
+            <div class="sample-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Asíncrona</span>
+                    <span class="stat-value">2 sweeps</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Inicial</span>
+                    <span class="stat-value">-10.578</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Final (Estável)</span>
+                    <span class="stat-value">-28.444</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Síncrona</span>
+                    <span class="stat-value">Sim (3 iters)</span>
+                </div>
+            </div>
+        </div>
+        
+
+        <div class="digit-section">
+            <h3>Dígito Padrão 4</h3>
+            
+    <div class="digit-comparison-card">
+        <div class="grids-wrapper">
+            <div class="grid-column">
+                <h4>Original</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell white-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell white-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell dark-pixel" title="Pixel 10"></div><div class="grid-cell dark-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell dark-pixel" title="Pixel 15"></div><div class="grid-cell dark-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell dark-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell dark-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell dark-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell white-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell white-pixel" title="Pixel 40"></div><div class="grid-cell white-pixel" title="Pixel 41"></div><div class="grid-cell white-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">20% ruído</span>
+            </div>
+            <div class="grid-column">
+                <h4>Decodificado (Link)</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell white-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 4 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell white-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 10 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 15 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 16"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 17 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 27 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell dark-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 32 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell dark-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell white-pixel" title="Pixel 37"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 38 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell dark-pixel corrupted-pixel" title="Pixel 40 (CORROMPIDO)"></div><div class="grid-cell white-pixel" title="Pixel 41"></div><div class="grid-cell white-pixel" title="Pixel 42"></div><div class="grid-cell white-pixel corrupted-pixel" title="Pixel 43 (CORROMPIDO)"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+            <div class="grid-arrow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <span class="arrow-label">Rede Hopfield</span>
+            </div>
+            <div class="grid-column">
+                <h4>Recuperado</h4>
+                <div class="grid-container">
+                    <div class="grid-cell dark-pixel" title="Pixel 0"></div><div class="grid-cell dark-pixel" title="Pixel 1"></div><div class="grid-cell white-pixel" title="Pixel 2"></div><div class="grid-cell dark-pixel" title="Pixel 3"></div><div class="grid-cell dark-pixel" title="Pixel 4"></div><div class="grid-cell dark-pixel" title="Pixel 5"></div><div class="grid-cell dark-pixel" title="Pixel 6"></div><div class="grid-cell white-pixel" title="Pixel 7"></div><div class="grid-cell dark-pixel" title="Pixel 8"></div><div class="grid-cell dark-pixel" title="Pixel 9"></div><div class="grid-cell dark-pixel" title="Pixel 10"></div><div class="grid-cell dark-pixel" title="Pixel 11"></div><div class="grid-cell white-pixel" title="Pixel 12"></div><div class="grid-cell dark-pixel" title="Pixel 13"></div><div class="grid-cell dark-pixel" title="Pixel 14"></div><div class="grid-cell dark-pixel" title="Pixel 15"></div><div class="grid-cell dark-pixel" title="Pixel 16"></div><div class="grid-cell white-pixel" title="Pixel 17"></div><div class="grid-cell dark-pixel" title="Pixel 18"></div><div class="grid-cell dark-pixel" title="Pixel 19"></div><div class="grid-cell dark-pixel" title="Pixel 20"></div><div class="grid-cell dark-pixel" title="Pixel 21"></div><div class="grid-cell dark-pixel" title="Pixel 22"></div><div class="grid-cell dark-pixel" title="Pixel 23"></div><div class="grid-cell dark-pixel" title="Pixel 24"></div><div class="grid-cell dark-pixel" title="Pixel 25"></div><div class="grid-cell dark-pixel" title="Pixel 26"></div><div class="grid-cell dark-pixel" title="Pixel 27"></div><div class="grid-cell dark-pixel" title="Pixel 28"></div><div class="grid-cell dark-pixel" title="Pixel 29"></div><div class="grid-cell white-pixel" title="Pixel 30"></div><div class="grid-cell white-pixel" title="Pixel 31"></div><div class="grid-cell white-pixel" title="Pixel 32"></div><div class="grid-cell dark-pixel" title="Pixel 33"></div><div class="grid-cell dark-pixel" title="Pixel 34"></div><div class="grid-cell white-pixel" title="Pixel 35"></div><div class="grid-cell white-pixel" title="Pixel 36"></div><div class="grid-cell white-pixel" title="Pixel 37"></div><div class="grid-cell dark-pixel" title="Pixel 38"></div><div class="grid-cell dark-pixel" title="Pixel 39"></div><div class="grid-cell white-pixel" title="Pixel 40"></div><div class="grid-cell white-pixel" title="Pixel 41"></div><div class="grid-cell white-pixel" title="Pixel 42"></div><div class="grid-cell dark-pixel" title="Pixel 43"></div><div class="grid-cell dark-pixel" title="Pixel 44"></div>
+                </div>
+            </div>
+        </div>
+        <div class="digit-metadata">
+            <span class="status-badge success">✓ SUCESSO</span>
+        </div>
+    </div>
+    
+            <div class="sample-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Asíncrona</span>
+                    <span class="stat-value">2 sweeps</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Inicial</span>
+                    <span class="stat-value">-8.800</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Energia Final (Estável)</span>
+                    <span class="stat-value">-24.444</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Convergência Síncrona</span>
+                    <span class="stat-value">Sim (3 iters)</span>
+                </div>
+            </div>
+        </div>
+        
+            </div>
+
+            <!-- Linha Completa: Gráficos de Sensibilidade e Energia -->
+            <div class="card full-width">
+                <h2>Análise de Robustez e Conectividade Sináptica</h2>
+                <p>
+                    Explore abaixo os gráficos interativos gerados para validar a rede. A curva de sensibilidade demonstra o impacto da densidade de ruído na taxa de acerto. A trajetória de energia prova o decaimento estável do estado energético durante o processo assíncrono.
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div>
+                        <h3>Taxa de Recuperação vs. Nível de Ruído</h3>
+                        <div id="sensitivity-chart" class="chart-container"></div>
+                    </div>
+                    <div>
+                        <h3>Dinâmica de Energia (Estabilidade Lyapunov)</h3>
+                        <div id="energy-chart" class="chart-container"></div>
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <label for="digit-selector" style="font-size: 0.9rem; color: var(--text-secondary); margin-right: 0.5rem;">Selecione o Dígito:</label>
+                            <select id="digit-selector" style="background: #1e293b; color: white; border: 1px solid var(--card-border); padding: 0.4rem 1rem; border-radius: 8px;">
+                                <option value="1">Dígito 1</option>
+                                <option value="2">Dígito 2</option>
+                                <option value="3">Dígito 3</option>
+                                <option value="4">Dígito 4</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linha Completa: Discussão e Conclusões -->
+            <div class="card full-width">
+                <h2>Discussão e Conclusão dos Resultados</h2>
+                <p>
+                    A análise das simulações revela características essenciais da rede de Hopfield como memória associativa:
+                </p>
+                <ol>
+                    <li>
+                        <strong>Capacidade de Armazenamento e Ortogonalidade</strong>: 
+                        O dígito "1" obteve a melhor taxa de recuperação (~91.6% sob 20% de ruído) devido à sua baixa correlação com os demais padrões (ex: produto interno normalizado de apenas -0.20 com o dígito "4").
+                        Por outro lado, o dígito "3" apresentou a menor taxa de recuperação (~45.8%). Isso se deve à sua grande similaridade estrutural com o dígito "2" (correlação de +0.47, ou 21 pixels correspondentes de mesma cor). A alta correlação cria bacias de atração sobrepostas e estados espúrios indesejados, confundindo a rede em níveis maiores de ruído.
+                    </li>
+                    <li>
+                        <strong>Estabilidade Lyapunov</strong>:
+                        O gráfico da dinâmica de energia demonstra de forma explícita que a energia da rede decresce de maneira monótona a cada atualização de neurônio (asíncrona), alcançando um patamar estável mínimo (atrator local).
+                    </li>
+                    <li>
+                        <strong>Comparações de Atualização</strong>:
+                        A dinâmica assíncrona mostrou-se ligeiramente mais resiliente e livre de oscilações na maioria dos casos em comparação com a dinâmica síncrona. Esta última ocasionalmente oscila entre dois estados complementares, não convergindo a um padrão fixo estável.
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Injected data from Python simulation runs
+        const sensData = [{"Ru\u00eddo":"0%","Async_D1":1.0,"Sync_D1":1.0,"Async_D2":1.0,"Sync_D2":1.0,"Async_D3":1.0,"Sync_D3":1.0,"Async_D4":1.0,"Sync_D4":1.0},{"Ru\u00eddo":"5%","Async_D1":1.0,"Sync_D1":1.0,"Async_D2":0.89,"Sync_D2":0.8,"Async_D3":0.756,"Sync_D3":0.724,"Async_D4":0.986,"Sync_D4":1.0},{"Ru\u00eddo":"10%","Async_D1":0.994,"Sync_D1":1.0,"Async_D2":0.772,"Sync_D2":0.676,"Async_D3":0.658,"Sync_D3":0.604,"Async_D4":0.912,"Sync_D4":0.916},{"Ru\u00eddo":"15%","Async_D1":0.968,"Sync_D1":0.98,"Async_D2":0.674,"Sync_D2":0.614,"Async_D3":0.506,"Sync_D3":0.416,"Async_D4":0.796,"Sync_D4":0.852},{"Ru\u00eddo":"20%","Async_D1":0.928,"Sync_D1":0.93,"Async_D2":0.644,"Sync_D2":0.54,"Async_D3":0.462,"Sync_D3":0.388,"Async_D4":0.744,"Sync_D4":0.782},{"Ru\u00eddo":"25%","Async_D1":0.84,"Sync_D1":0.804,"Async_D2":0.57,"Sync_D2":0.496,"Async_D3":0.396,"Sync_D3":0.334,"Async_D4":0.662,"Sync_D4":0.688},{"Ru\u00eddo":"30%","Async_D1":0.694,"Sync_D1":0.694,"Async_D2":0.46,"Sync_D2":0.386,"Async_D3":0.33,"Sync_D3":0.25,"Async_D4":0.522,"Sync_D4":0.57},{"Ru\u00eddo":"35%","Async_D1":0.534,"Sync_D1":0.534,"Async_D2":0.354,"Sync_D2":0.262,"Async_D3":0.254,"Sync_D3":0.172,"Async_D4":0.388,"Sync_D4":0.4},{"Ru\u00eddo":"40%","Async_D1":0.296,"Sync_D1":0.284,"Async_D2":0.21,"Sync_D2":0.19,"Async_D3":0.156,"Sync_D3":0.068,"Async_D4":0.252,"Sync_D4":0.226},{"Ru\u00eddo":"45%","Async_D1":0.134,"Sync_D1":0.066,"Async_D2":0.104,"Sync_D2":0.036,"Async_D3":0.054,"Sync_D3":0.01,"Async_D4":0.104,"Sync_D4":0.038},{"Ru\u00eddo":"50%","Async_D1":0.018,"Sync_D1":0.01,"Async_D2":0.012,"Sync_D2":0.01,"Async_D3":0.008,"Sync_D3":0.0,"Async_D4":0.014,"Sync_D4":0.012}];
+        const sampleRuns = {"1": {"original": [-1, -1, 1, 1, -1, -1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1], "noisy": [-1, -1, 1, 1, 1, -1, 1, 1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, 1, 1, 1, -1, 1, 1, -1, -1], "flips": [39, 25, 26, 43, 35, 41, 4, 12, 8], "recovered_async": [-1, -1, 1, 1, -1, -1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1], "converged_async": true, "success_async": true, "history_async_energies": [-6.755555555555555, -8.622222222222224, -10.400000000000002, -12.533333333333335, -13.86666666666667, -14.666666666666668, -17.155555555555555, -18.222222222222218, -20.79999999999999, -21.95555555555555], "history_async_sweeps": 2, "recovered_sync": [-1, -1, 1, 1, -1, -1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1], "converged_sync": true, "success_sync": true, "history_sync_energies": [-6.755555555555555, -21.95555555555555], "history_sync_iterations": 2}, "2": {"original": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1], "noisy": [1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, -1, 1], "flips": [38, 28, 2, 14, 23, 4, 17, 18, 43], "recovered_async": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1], "converged_async": true, "success_async": true, "history_async_energies": [-7.7333333333333325, -9.866666666666669, -11.733333333333333, -13.955555555555554, -16.53333333333333, -17.066666666666663, -20.08888888888889, -22.222222222222232, -25.60000000000001, -26.488888888888898], "history_async_sweeps": 2, "recovered_sync": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1], "converged_sync": true, "success_sync": true, "history_sync_energies": [-7.7333333333333325, -26.488888888888898], "history_sync_iterations": 2}, "3": {"original": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "noisy": [1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, -1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1, 1, -1, -1, -1, 1, 1, 1], "flips": [11, 34, 41, 25, 9, 8, 39, 18, 40], "recovered_async": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1], "converged_async": true, "success_async": false, "history_async_energies": [-10.577777777777778, -11.733333333333336, -14.4, -15.91111111111111, -16.17777777777778, -17.6, -17.77777777777778, -21.15555555555555, -21.688888888888886, -22.93333333333333, -26.755555555555553, -28.444444444444436], "history_async_sweeps": 2, "recovered_sync": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1], "converged_sync": true, "success_sync": false, "history_sync_energies": [-10.577777777777778, -27.999999999999996, -28.444444444444436], "history_sync_iterations": 3}, "4": {"original": [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1], "noisy": [1, 1, -1, 1, -1, 1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, 1, -1, -1, -1, -1, 1, 1, -1, -1, -1, 1], "flips": [10, 17, 27, 43, 40, 4, 38, 32, 15], "recovered_async": [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1], "converged_async": true, "success_async": true, "history_async_energies": [-8.799999999999997, -10.666666666666666, -10.933333333333332, -13.422222222222219, -16.266666666666666, -18.84444444444445, -19.111111111111114, -20.0, -23.2, -24.444444444444443], "history_async_sweeps": 2, "recovered_sync": [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1], "converged_sync": true, "success_sync": true, "history_sync_energies": [-8.799999999999997, -24.0, -24.444444444444443], "history_sync_iterations": 3}};
+
+        // --- Render Sensitivity Chart ---
+        const noiseLevels = sensData.map(d => parseInt(d['Ruído']));
+        const sensitivityTraces = [];
+        const digits = ["1", "2", "3", "4"];
+        const colorsAsync = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+        const colorsSync = ['#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
+
+        digits.forEach((name, i) => {
+            // Async trace
+            sensitivityTraces.push({
+                x: noiseLevels,
+                y: sensData.map(d => d[`Async_D${name}`] * 100),
+                name: `Dígito ${name} (Async)`,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: colorsAsync[i], width: 2.5 },
+                marker: { size: 6 }
+            });
+            // Sync trace
+            sensitivityTraces.push({
+                x: noiseLevels,
+                y: sensData.map(d => d[`Sync_D${name}`] * 100),
+                name: `Dígito ${name} (Sync)`,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: colorsSync[i], width: 1.5, dash: 'dash' },
+                opacity: 0.6
+            });
+        });
+
+        const sensLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#f8fafc', family: 'Outfit, sans-serif' },
+            margin: { t: 20, r: 20, l: 50, b: 50 },
+            xaxis: { title: 'Porcentagem de Ruído (%)', gridcolor: 'rgba(255,255,255,0.05)', zeroline: false },
+            yaxis: { title: 'Taxa de Recuperação (%)', gridcolor: 'rgba(255,255,255,0.05)', range: [-5, 105] },
+            legend: { orientation: 'h', y: -0.2, x: 0 },
+            hovermode: 'x unified'
+        };
+
+        Plotly.newPlot('sensitivity-chart', sensitivityTraces, sensLayout, { responsive: true, displayModeBar: false });
+
+        // --- Render Energy Chart ---
+        function updateEnergyChart(digitName) {
+            const run = sampleRuns[digitName];
+            const asyncEnergies = run.history_async_energies;
+            const syncEnergies = run.history_sync_energies;
+
+            const energyTraces = [
+                {
+                    x: Array.from({ length: asyncEnergies.length }, (_, i) => i),
+                    y: asyncEnergies,
+                    name: 'Atualização Assíncrona',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: '#3b82f6', width: 2 },
+                    marker: { size: 4 }
+                },
+                {
+                    x: Array.from({ length: syncEnergies.length }, (_, i) => i * 45), // Scale to match step density roughly
+                    y: syncEnergies,
+                    name: 'Atualização Síncrona (Escalada)',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#8b5cf6', width: 1.5, dash: 'dash' }
+                }
+            ];
+
+            const energyLayout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#f8fafc', family: 'Outfit, sans-serif' },
+                margin: { t: 20, r: 20, l: 50, b: 50 },
+                xaxis: { title: 'Micro-passos (Atualizações de Neurônio)', gridcolor: 'rgba(255,255,255,0.05)', zeroline: false },
+                yaxis: { title: 'Energia E(s)', gridcolor: 'rgba(255,255,255,0.05)' },
+                legend: { orientation: 'h', y: -0.2, x: 0 },
+                hovermode: 'x unified'
+            };
+
+            Plotly.newPlot('energy-chart', energyTraces, energyLayout, { responsive: true, displayModeBar: false });
+        }
+
+        // Initialize energy chart for Digit 1
+        updateEnergyChart("1");
+
+        // Event listener for digit selection change
+        document.getElementById('digit-selector').addEventListener('change', (e) => {
+            updateEnergyChart(e.target.value);
+        });
+    </script>
+</body>
+</html>
