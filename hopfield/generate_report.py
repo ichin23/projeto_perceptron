@@ -18,9 +18,9 @@ def generate_grid_html(original, noisy, recovered, flips, success):
             title_text = f"Pixel {idx}"
             
             if val == 1:
-                cell_class += " dark-pixel"
-            else:
                 cell_class += " white-pixel"
+            else:
+                cell_class += " dark-pixel"
                 
             if is_noisy_grid and idx in flips:
                 cell_class += " corrupted-pixel"
